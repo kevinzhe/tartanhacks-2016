@@ -4,8 +4,8 @@ $(document).ready(function() {
 
     var Up1Pressed = false;
     var Down1Pressed = false;
-    var Up2Pressed = false;
-    var Down2Pressed = false;
+    // var Up2Pressed = false;
+    // var Down2Pressed = false;
     //BEGIN LIBRARY CODE
     var x = 150;
     var y = 150;
@@ -15,6 +15,7 @@ $(document).ready(function() {
     var WIDTH;
     var HEIGHT;
     var ctx;
+    var curAccer;
     
     var intervalId;
     
@@ -67,23 +68,24 @@ $(document).ready(function() {
     function onKeyDown(evt) {
       if (evt.keyCode == 81) Up1Pressed = true; //q
       else if (evt.keyCode == 65) Down1Pressed = true; //a
-      else if (evt.keyCode == 80) Up2Pressed = true; //p
-      else if (evt.keyCode == 76) Down2Pressed = true; //l
+      // else if (evt.keyCode == 80) Up2Pressed = true; //p
+      // else if (evt.keyCode == 76) Down2Pressed = true; //l
     }
     
     //and unset them when the right or left key is released
     function onKeyUp(evt) {
       if (evt.keyCode == 81) Up1Pressed = false; //q
       else if (evt.keyCode == 65) Down1Pressed = false;
-      else if (evt.keyCode == 80) Up2Pressed = false;
-      else if (evt.keyCode == 76) Down2Pressed = false;
+      // else if (evt.keyCode == 80) Up2Pressed = false;
+      // else if (evt.keyCode == 76) Down2Pressed = false;
     }
     
     $(document).keydown(onKeyDown);
     $(document).keyup(onKeyUp);
 
     socket.on('game move', function(msg) {
-        console.log(msg.data);
+        curAccer = msg.data.y;
+        console.log(msg.data.y);
     });
            
     function draw() {
@@ -95,19 +97,27 @@ $(document).ready(function() {
       // ctx.fillStyle = "rgba(255, 255, 255,0)";
       ctx.fillStyle = "#00A308";
       rect(0, 0, WIDTH, HEIGHT);
-    
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.moveTo(WIDTH/2,0);
+      ctx.lineTo(WIDTH/2,HEIGHT);
+      ctx.stroke();
       // ;
       ctx.fillStyle = "#003333";
       circle(x, y, r);
+
       ctx.fillStyle = "#00FF33";
       ctx.font = "30px Arial";
-      ctx.fillText("Hello World",10,50);
+
+      ctx.fillText("Score: "+String(player1Score),50,50);
+      ctx.fillText("Score: "+String(player2Score),WIDTH-200,50);
       //move the paddle if left or right is currently pressed
       if (Up1Pressed) paddle1y -= 5;
       else if (Down1Pressed) paddle1y += 5;
-    
-      if (Up2Pressed) paddle2y -= 5;
-      else if (Down2Pressed) paddle2y += 5;
+
+      paddle2y += curAccer*3;
+      // if (Up2Pressed) paddle2y -= 5;
+      // else if (Down2Pressed) paddle2y += 5;
     
       rect(0, paddle1y, paddle1w, paddle1h);
       rect(WIDTH-paddle2w, paddle2y, WIDTH, paddle2h);
@@ -116,18 +126,28 @@ $(document).ready(function() {
         dy = -dy;
     
       if (x + r + dx > WIDTH - paddle2w)
-        if (y > paddle2y && y < paddle2y+paddle2h)
+        if (y > paddle2y && y < paddle2y+paddle2h){
+            dy = 2 * ((y-(paddle1y+paddle1h/2))/paddle1h);
             dx = -dx;
-        else
-            clearInterval(intervalId);
+        }
+            
+        else{
+            setInterval(enddraw, 15);
+            clearInterval(intervalId);}
       else if (x - r + dx < paddle1w)
-        if (y > paddle1y && y < paddle1y+paddle1h)
+        if (y > paddle1y && y < paddle1y+paddle1h){
+            dy = 2 * ((y-(paddle1y+paddle1h/2))/paddle1h);
             dx = -dx;
-        else
-            clearInterval(intervalId);
+            }
+        else{
+            setInterval(enddraw, 15);
+            clearInterval(intervalId);}
      
       x += dx;
       y += dy;
+    }
+    function enddraw(){
+    ctx.fillText("GAMEOVER",WIDTH/2-50,50);
     }
     
     init();
